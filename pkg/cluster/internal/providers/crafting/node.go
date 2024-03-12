@@ -101,6 +101,7 @@ type nodeCmd struct {
 
 func (c *nodeCmd) Run() error {
 	args := []string{
+		// Crafting
 		"exec",
 	}
 	if c.stdin != nil {
