@@ -160,6 +160,10 @@ func Cluster(logger log.Logger, p providers.Provider, opts *ClusterOptions) erro
 		return err
 	}
 
+	if err = crafting.PatchKubeProxy(p, opts.Config.Name); err != nil {
+		return err
+	}
+
 	// optionally display usage
 	if opts.DisplayUsage {
 		logUsage(logger, opts.Config.Name, opts.KubeconfigPath)
