@@ -25,6 +25,7 @@ import (
 
 	"sigs.k8s.io/kind/pkg/cluster/internal/delete"
 	"sigs.k8s.io/kind/pkg/cluster/internal/providers"
+	"sigs.k8s.io/kind/pkg/cluster/internal/providers/crafting"
 	"sigs.k8s.io/kind/pkg/errors"
 	"sigs.k8s.io/kind/pkg/internal/apis/config"
 	"sigs.k8s.io/kind/pkg/internal/apis/config/encoding"
@@ -249,8 +250,11 @@ func validateProvider(p providers.Provider) error {
 		if !info.Cgroup2 {
 			return errors.New("running kind with rootless provider requires cgroup v2, see https://kind.sigs.k8s.io/docs/user/rootless/")
 		}
-		if !info.SupportsMemoryLimit || !info.SupportsPidsLimit || !info.SupportsCPUShares {
-			return errors.New("running kind with rootless provider requires setting systemd property \"Delegate=yes\", see https://kind.sigs.k8s.io/docs/user/rootless/")
+		// Do not check systemd if running kind in sandbox workspace.
+		if !crafting.InSandboxWorkspace() {
+			if !info.SupportsMemoryLimit || !info.SupportsPidsLimit || !info.SupportsCPUShares {
+				return errors.New("running kind with rootless provider requires setting systemd property \"Delegate=yes\", see https://kind.sigs.k8s.io/docs/user/rootless/")
+			}
 		}
 	}
 	return nil
