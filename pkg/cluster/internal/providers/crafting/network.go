@@ -64,68 +64,6 @@ func ensureNetwork(name string) error {
 	// Create ipv4 network
 	mtu := getDefaultNetworkMTU()
 	return createNetworkNoDuplicates(name, "", mtu)
-
-	// Generate unique subnet per network based on the name
-	// obtained from the ULA fc00::/8 range
-	// Use the MTU configured for the docker default network
-	// Make N attempts with "probing" in case we happen to collide
-	subnet := generateULASubnetFromName(name, 0)
-	err = createNetworkNoDuplicates(name, subnet, mtu)
-	if err == nil {
-		// Success!
-		return nil
-	}
-
-	// On the first try check if ipv6 fails entirely on this machine
-	// https://github.com/kubernetes-sigs/kind/issues/1544
-	// Otherwise if it's not a pool overlap error, fail
-	// If it is, make more attempts below
-	if isIPv6UnavailableError(err) {
-		// only one attempt, IPAM is automatic in ipv4 only
-		return createNetworkNoDuplicates(name, "", mtu)
-	}
-	if isPoolOverlapError(err) {
-		// pool overlap suggests perhaps another process created the network
-		// check if network exists already and remove any duplicate networks
-		exists, err := checkIfNetworkExists(name)
-		if err != nil {
-			return err
-		}
-		if exists {
-			return nil
-		}
-		// otherwise we'll start trying with different subnets
-	} else {
-		// unknown error ...
-		return err
-	}
-
-	// keep trying for ipv6 subnets
-	const maxAttempts = 5
-	for attempt := int32(1); attempt < maxAttempts; attempt++ {
-		subnet := generateULASubnetFromName(name, attempt)
-		err = createNetworkNoDuplicates(name, subnet, mtu)
-		if err == nil {
-			// success!
-			return nil
-		}
-		if isPoolOverlapError(err) {
-			// pool overlap suggests perhaps another process created the network
-			// check if network exists already and remove any duplicate networks
-			exists, err := checkIfNetworkExists(name)
-			if err != nil {
-				return err
-			}
-			if exists {
-				return nil
-			}
-			// otherwise we'll try again
-			continue
-		}
-		// unknown error ...
-		return err
-	}
-	return errors.New("exhausted attempts trying to find a non-overlapping subnet")
 }
 
 func createNetworkNoDuplicates(name, ipv6Subnet string, mtu int) error {
