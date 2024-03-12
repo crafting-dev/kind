@@ -219,7 +219,7 @@ func runArgsForNode(node *config.Node, clusterIPFamily config.ClusterIPFamily, n
 		"--hostname", name, // make hostname match container name
 		// label the node with the role ID
 		"--label", fmt.Sprintf("%s=%s", nodeRoleLabelKey, node.Role),
-		// capabilities
+		// Crafting: capabilities
 		"--cap-add=chown", "--cap-add=dac_override", "--cap-add=fowner", "--cap-add=fsetid", "--cap-add=kill", "--cap-add=setgid",
 		"--cap-add=setuid", "--cap-add=setpcap", "--cap-add=net_bind_service", "--cap-add=net_admin", "--cap-add=net_raw", "--cap-add=sys_chroot",
 		"--cap-add=sys_ptrace", "--cap-add=sys_admin", "--cap-add=mknod", "--cap-add=audit_write", "--cap-add=setfcap",

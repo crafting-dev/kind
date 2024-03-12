@@ -61,7 +61,7 @@ func ensureNetwork(name string) error {
 		return nil
 	}
 
-	// Create ipv4 network
+	// Crafting: Create ipv4 network
 	mtu := getDefaultNetworkMTU()
 	return createNetworkNoDuplicates(name, "", mtu)
 }
