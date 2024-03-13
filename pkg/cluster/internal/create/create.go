@@ -116,6 +116,10 @@ func Cluster(logger log.Logger, p providers.Provider, opts *ClusterOptions) erro
 		actionsToRun = append(actionsToRun,
 			kubeadminit.NewAction(opts.Config), // run kubeadm init
 		)
+		// Crafting: patch kube-proxy
+		if crafting.InSandboxWorkspace() {
+			actionsToRun = append(actionsToRun, crafting.NewKubeProxyPatchAction(p, opts.Config))
+		}
 		// this step might be skipped, but is next after init
 		if !opts.Config.Networking.DisableDefaultCNI {
 			actionsToRun = append(actionsToRun,
@@ -157,10 +161,6 @@ func Cluster(logger log.Logger, p providers.Provider, opts *ClusterOptions) erro
 		}
 	}
 	if err != nil {
-		return err
-	}
-
-	if err = crafting.PatchKubeProxy(p, opts.Config.Name); err != nil {
 		return err
 	}
 

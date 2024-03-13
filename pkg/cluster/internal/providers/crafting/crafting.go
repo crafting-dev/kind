@@ -5,24 +5,26 @@ import (
 	"fmt"
 	"os"
 
+	"sigs.k8s.io/kind/pkg/cluster/internal/create/actions"
 	"sigs.k8s.io/kind/pkg/cluster/internal/providers"
 	"sigs.k8s.io/kind/pkg/cluster/nodeutils"
 	"sigs.k8s.io/kind/pkg/errors"
+	"sigs.k8s.io/kind/pkg/internal/apis/config"
 )
 
-func InSandboxWorkspace() bool {
-	// TODO. Better way to check.
-	_, ok := os.LookupEnv("SANDBOX_NAME")
-	return ok
+type kubeProxyPatchAction struct {
+	p   providers.Provider
+	cfg *config.Cluster
 }
 
-func IsAvailable() bool {
-	return InSandboxWorkspace()
+func NewKubeProxyPatchAction(p providers.Provider, cfg *config.Cluster) actions.Action {
+	return &kubeProxyPatchAction{p: p, cfg: cfg}
 }
 
-func PatchKubeProxy(p providers.Provider, name string) error {
+func (a *kubeProxyPatchAction) Execute(ctx *actions.ActionContext) error {
+	name := a.cfg.Name
 	// find a control plane node to patch kube-proxy
-	n, err := p.ListNodes(name)
+	n, err := a.p.ListNodes(name)
 	if err != nil {
 		return err
 	}
@@ -44,4 +46,14 @@ func PatchKubeProxy(p providers.Provider, name string) error {
 	}
 
 	return nil
+}
+
+func InSandboxWorkspace() bool {
+	// TODO. Better way to check.
+	_, err := os.Stat("/run/sandbox/svc/workspace.sock")
+	return err == nil
+}
+
+func IsAvailable() bool {
+	return InSandboxWorkspace()
 }

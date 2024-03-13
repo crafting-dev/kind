@@ -17,7 +17,6 @@ limitations under the License.
 package crafting
 
 import (
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -322,20 +321,8 @@ func info() (*providers.ProviderInfo, error) {
 	info.SupportsPidsLimit = true
 	info.SupportsCPUShares = true
 
-	for _, o := range dInfo.SecurityOptions {
-		// o is like "name=seccomp,profile=default", or "name=rootless",
-		csvReader := csv.NewReader(strings.NewReader(o))
-		sliceSlice, err := csvReader.ReadAll()
-		if err != nil {
-			return nil, err
-		}
-		for _, f := range sliceSlice {
-			for _, ff := range f {
-				if ff == "name=rootless" {
-					info.Rootless = true
-				}
-			}
-		}
-	}
+	// Crafting: For crafting provider, always rootless
+	info.Rootless = true
+
 	return &info, nil
 }
