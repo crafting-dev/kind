@@ -317,14 +317,11 @@ func info() (*providers.ProviderInfo, error) {
 	info := providers.ProviderInfo{
 		Cgroup2: dInfo.CgroupVersion == "2",
 	}
-	// When CgroupDriver == "none", the MemoryLimit/PidsLimit/CPUShares
-	// values are meaningless and need to be considered false.
-	// https://github.com/moby/moby/issues/42151
-	if dInfo.CgroupDriver != "none" {
-		info.SupportsMemoryLimit = dInfo.MemoryLimit
-		info.SupportsPidsLimit = dInfo.PidsLimit
-		info.SupportsCPUShares = dInfo.CPUShares
-	}
+	// Crafting: In sandbox workspace, let's set these to true
+	info.SupportsMemoryLimit = true
+	info.SupportsPidsLimit = true
+	info.SupportsCPUShares = true
+
 	for _, o := range dInfo.SecurityOptions {
 		// o is like "name=seccomp,profile=default", or "name=rootless",
 		csvReader := csv.NewReader(strings.NewReader(o))
