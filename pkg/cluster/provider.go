@@ -33,6 +33,7 @@ import (
 	internaldelete "sigs.k8s.io/kind/pkg/cluster/internal/delete"
 	"sigs.k8s.io/kind/pkg/cluster/internal/kubeconfig"
 	internalproviders "sigs.k8s.io/kind/pkg/cluster/internal/providers"
+	"sigs.k8s.io/kind/pkg/cluster/internal/providers/crafting"
 	"sigs.k8s.io/kind/pkg/cluster/internal/providers/docker"
 	"sigs.k8s.io/kind/pkg/cluster/internal/providers/nerdctl"
 	"sigs.k8s.io/kind/pkg/cluster/internal/providers/podman"
@@ -113,6 +114,9 @@ var NoNodeProviderDetectedError = errors.NewWithoutStack("failed to detect any s
 // that logic will be in a public API as well.
 func DetectNodeProvider() (ProviderOption, error) {
 	// auto-detect based on each node provider's IsAvailable() function
+	if crafting.IsAvailable() {
+		return ProviderWithCrafting(), nil
+	}
 	if docker.IsAvailable() {
 		return ProviderWithDocker(), nil
 	}
@@ -156,6 +160,12 @@ func (a providerRuntimeOption) apply(p *Provider) {
 }
 
 var _ ProviderOption = providerRuntimeOption(nil)
+
+func ProviderWithCrafting() ProviderOption {
+	return providerRuntimeOption(func(p *Provider) {
+		p.provider = crafting.NewProvider(p.logger)
+	})
+}
 
 // ProviderWithDocker configures the provider to use docker runtime
 func ProviderWithDocker() ProviderOption {
