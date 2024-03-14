@@ -20,9 +20,11 @@ jobs:
           export CGO_ENABLED=0
           GOARCH=amd64 go build -o kind-amd64 -ldflags="-X sigs.k8s.io/kind/pkg/cmd/kind/version.gitCommit=$(git rev-parse HEAD)" ./cmd/kind
           GOARCH=arm64 go build -o kind-arm64 -ldflags="-X sigs.k8s.io/kind/pkg/cmd/kind/version.gitCommit=$(git rev-parse HEAD)" ./cmd/kind
+          tar -czvf kind-amd64.tar.gz kind-amd64
+          tar -czvf kind-arm64.tar.gz kind-arm64 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            kind-amd64
-            kind-arm64
+            kind-amd64.tar.gz
+            kind-arm64.tar.gz
