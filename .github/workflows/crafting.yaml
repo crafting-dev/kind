@@ -1,0 +1,30 @@
+name: Crafting
+
+on:
+  push:
+    tags:
+      - "v*.*.*-crafting"
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go 1.21.x
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21.x'
+      - name: Build
+        run: |
+          go mod tidy
+          export CGO_ENABLED=0
+          GOARCH=amd64 go build -o kind-amd64 -ldflags="-X sigs.k8s.io/kind/pkg/cmd/kind/version.gitCommit=$(git rev-parse HEAD)" ./cmd/kind
+          GOARCH=arm64 go build -o kind-arm64 -ldflags="-X sigs.k8s.io/kind/pkg/cmd/kind/version.gitCommit=$(git rev-parse HEAD)" ./cmd/kind
+          tar -czvf kind-amd64.tar.gz kind-amd64
+          tar -czvf kind-arm64.tar.gz kind-arm64 
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            kind-amd64.tar.gz
+            kind-arm64.tar.gz
