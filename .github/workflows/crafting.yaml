@@ -1,0 +1,29 @@
+name: Crafting
+
+on:
+  push:
+    tags:
+      - "v*.*.*-crafting"
+
+jobs:
+  build:
+    runs-on: ubuntu:22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go 1.21.x
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21.x'
+      - name: Build
+        run: |
+          go mod tidy
+          export CGO_ENABLED=0
+          GOARCH=amd64 go build -o kind-amd64 ./cmd/kind
+          GOARCH=arm64 go build -o kind-arm64 ./cmd/kind
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Go-results-${{ matrix.go-version }}
+          path: |
+            kind-amd64
+            kind-arm64
