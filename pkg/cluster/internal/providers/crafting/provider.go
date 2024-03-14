@@ -315,14 +315,12 @@ func info() (*providers.ProviderInfo, error) {
 	}
 	info := providers.ProviderInfo{
 		Cgroup2: dInfo.CgroupVersion == "2",
+		// Crafting: In sandbox workspace, let's set these to true
+		SupportsMemoryLimit: true,
+		SupportsPidsLimit:   true,
+		SupportsCPUShares:   true,
+		Rootless:            true,
 	}
-	// Crafting: In sandbox workspace, let's set these to true
-	info.SupportsMemoryLimit = true
-	info.SupportsPidsLimit = true
-	info.SupportsCPUShares = true
-
-	// Crafting: For crafting provider, always rootless
-	info.Rootless = true
 
 	return &info, nil
 }

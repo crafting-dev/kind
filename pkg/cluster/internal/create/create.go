@@ -25,7 +25,6 @@ import (
 
 	"sigs.k8s.io/kind/pkg/cluster/internal/delete"
 	"sigs.k8s.io/kind/pkg/cluster/internal/providers"
-	"sigs.k8s.io/kind/pkg/cluster/internal/providers/crafting"
 	"sigs.k8s.io/kind/pkg/errors"
 	"sigs.k8s.io/kind/pkg/internal/apis/config"
 	"sigs.k8s.io/kind/pkg/internal/apis/config/encoding"
@@ -116,10 +115,6 @@ func Cluster(logger log.Logger, p providers.Provider, opts *ClusterOptions) erro
 		actionsToRun = append(actionsToRun,
 			kubeadminit.NewAction(opts.Config), // run kubeadm init
 		)
-		// Crafting: patch kube-proxy
-		if crafting.InSandboxWorkspace() {
-			actionsToRun = append(actionsToRun, crafting.NewKubeProxyPatchAction(p, opts.Config))
-		}
 		// this step might be skipped, but is next after init
 		if !opts.Config.Networking.DisableDefaultCNI {
 			actionsToRun = append(actionsToRun,

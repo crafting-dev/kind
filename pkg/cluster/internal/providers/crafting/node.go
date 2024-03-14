@@ -17,6 +17,7 @@ limitations under the License.
 package crafting
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -140,7 +141,25 @@ func (c *nodeCmd) Run() error {
 	if c.stdout != nil {
 		cmd.SetStdout(c.stdout)
 	}
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	// Crafting: patch kube-proxy after kubeadm init
+	if c.command == "kubeadm" && len(c.args) > 0 && c.args[0] == "init" {
+		patchCmd := &nodeCmd{
+			nameOrID: c.nameOrID,
+			command:  "kubectl",
+			args: []string{"-n", "kube-system", "patch", "ds", "kube-proxy", "--type", "json",
+				"-p", "[{'op': 'replace', 'path': '/spec/template/spec/containers/0/securityContext', 'value':{'capabilities':{'add':['NET_ADMIN']}}}]"},
+		}
+		var buff bytes.Buffer
+		if err := patchCmd.SetStderr(&buff).Run(); err != nil {
+			return fmt.Errorf("patch kube-system capabilities error: %w, %s", err, buff.String())
+		}
+	}
+
+	return nil
 }
 
 func (c *nodeCmd) SetEnv(env ...string) exec.Cmd {
