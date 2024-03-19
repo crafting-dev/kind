@@ -18,6 +18,9 @@ jobs:
         run: |
           go mod tidy
           export CGO_ENABLED=0
+          export VERSION_FILE="./pkg/cmd/kind/version/version.go"
+          sed -i "s/versionCore = .*/versionCore = \"${{ github.ref_name }}\"/" "${VERSION_FILE}"
+          sed -i "s/versionPreRelease = .*/versionPreRelease = \"crafting\"/" "${VERSION_FILE}"
           GOARCH=amd64 go build -o kind-amd64 -ldflags="-X sigs.k8s.io/kind/pkg/cmd/kind/version.gitCommit=$(git rev-parse HEAD)" ./cmd/kind
           GOARCH=arm64 go build -o kind-arm64 -ldflags="-X sigs.k8s.io/kind/pkg/cmd/kind/version.gitCommit=$(git rev-parse HEAD)" ./cmd/kind
           tar -czvf kind-amd64.tar.gz kind-amd64
